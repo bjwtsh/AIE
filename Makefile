@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-PLATFORM := xilinx_vck5000_gen4x8_qdma_2_202220_1
+PLATFORM := xilinx_vck190_base_dfx_202310_1
 TARGET := hw
 
 XSA = $(strip $(patsubst %.xpfm, % , $(shell basename $(PLATFORM))))
@@ -36,6 +36,7 @@ VPP_LDFLAGS := --vivado.synth.jobs $(JOBS) --vivado.impl.jobs $(JOBS)
 
 BUILD_DIR = build.$(XSA).$(TARGET)
 OUTPUT_DIR = $(shell readlink -f ./$(BUILD_DIR))
+IMAGE_DIR = $(shell readlink -f ./$(BUILD_DIR)/sd_image)
 
 AIE_SRCS = $(AIE_DIR)/$(BUILD_DIR)/libadf.a
 XO_SRCS = $(PL_DIR)/$(BUILD_DIR)/*.xo
@@ -77,6 +78,21 @@ $(OUTPUT_DIR)/${XCLBIN_NAME}.xclbin: $(OUTPUT_DIR)/${XCLBIN_NAME}.xsa
 	  --package.boot_mode=ospi \
 	  -o $@ 2>&1 | tee $(XCLBIN_NAME)_xclbin.log
 	@echo "### ***** $(XCLBIN_NAME).xclbin packaging done! *****"
+
+$(OUTPUT_DIR)/${XCLBIN_NAME}: $(OUTPUT_DIR)/${XCLBIN_NAME}.xsa 
+	@echo "### ***** packaging source into $(XCLBIN_NAME).xclbin ... *****"
+	mkdir -p $(IMAGE_DIR); \
+	cd $(IMAGE_DIR); \
+	v++ 	--package -t hw \
+		-f $PLATFORM_REPO_PATHS/$(PLATFORM)/$(PLATFORM).xpfm \
+		--package.rootfs=$PLATFORM_REPO_PATHS/sw/versal/xilinx-versal-common-v2023.1/rootfs.ext4 \
+		--package.image_format=ext4 \
+		--package.boot_mode=sd \
+		--package.kernel_image=$PLATFORM_REPO_PATHS/sw/versal/xilinx-versal-common-v2023.1/Image \
+		--package.defer_aie_run \
+		--package.sd_file $(HOST_APP)	$(OUTPUT_DIR)/${XCLBIN_NAME}.xsa	$(AIE_SRCS) \
+		| tee $(XCLBIN_NAME)_image.log
+	@echo "### ***** SD image packaging done! *****"
 
 clean:
 	rm -rf *.log *.jou .Xil/
