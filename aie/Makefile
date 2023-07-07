@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-PLATFORM := xilinx_vck5000_gen4x8_qdma_2_202220_1
+PLATFORM := xilinx_vck190_base_dfx_202310_1
 TARGET := hw
 
 XPFM = $(shell platforminfo -p $(PLATFORM) --json="file")
