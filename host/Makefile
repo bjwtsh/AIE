@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
+#the vitis dir in server
+VITIS_DIR := /proj/xbuilds/2023.1_released/installs/lin64/Vitis/2023.1
+GCC_DIR := ${VITIS_DIR}/aietools/tps/lnx64/gcc/bin
+
 FLAGS := -Wall -c -g -fmessage-length=0
 FLAGS += -std=c++17 -Wno-unknown-pragmas -Wno-unused-label
 FLAGS += -Wno-int-to-pointer-cast
@@ -33,12 +37,12 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR);
 
 $(EXECUTABLE): $(BUILD_DIR)/host.o
-	g++ $^ $(LIBS) -std=c++17 -o $@
+	${GCC_DIR}/g++ $^ $(LIBS) -std=c++17 -o $@
 	@echo "COMPLETE: Host application $@ created."
 
 # Create object files
 $(BUILD_DIR)/host.o: host.cpp
-	g++ $(FLAGS) $(INCLUDES) -o $@ $^
+	${GCC_DIR}/g++ $(FLAGS) $(INCLUDES) -o $@ $^
 
 # ################ TARGET: make clean ################
 clean:
